@@ -29,7 +29,9 @@ pub fn run(config: &Config) -> Result<(), Box<dyn Error>> {
 
     f.read_to_string(&mut contents)?;
 
-    println!("With text:\n{}", contents);
+    for lines in search(&config.query, &contents) {
+        println!("{}", lines);
+    }
 
     Ok(())
 }
@@ -42,7 +44,7 @@ pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
             results.push(line);
         }
     }
-     results
+    results
 }
 #[cfg(test)]
 mod test {
