@@ -1,14 +1,29 @@
-use std::env;
 use std::error::Error;
 use std::fs::File;
 use std::io::prelude::*;
 
 mod search;
+
+#[derive(PartialEq, Debug)]
+pub enum Parameters {
+    CaseSensitive,
+    Save,
+}
+
+impl Parameters {
+    pub fn is_valid(param: &str) -> Result<Parameters, &str> {
+        match param.trim() {
+            "case_sensitive" => return Ok(Parameters::CaseSensitive),
+            "save" => return Ok(Parameters::Save),
+            _ => return Err("Parameter not found"),
+        };
+    }
+}
 #[derive(PartialEq, Debug)]
 pub struct Config<'a> {
     pub query: &'a str,
     pub filename: &'a str,
-    pub case_sensitive: bool,
+    pub parameters: Vec<Parameters>,
 } // if it will receive a reference
   // it needs to know until which block it is valid
 
@@ -21,13 +36,24 @@ impl<'a> Config<'a> {
         let query = &args[1];
         let filename = &args[2];
 
-        let case_sensitive = env::var("CASE_SENSITIVE").is_err();
+        let mut parameters = Vec::new();
+
+        if args.len() > 3 && args[3].contains("--") && args[3].len() > 2 {
+            for par in &args[3..] {
+                match Parameters::is_valid(&par.replace("--", "")) {
+                    Ok(p) => parameters.push(p),
+                    Err(_) => return Err("Invalid parameters"),
+                }
+            }
+        }
+
+        // let case_sensitive = env::var("CASE_SENSITIVE").is_err();
         // returns true if env var is not defined and false case is defined
 
         Ok(Config {
             query,
             filename,
-            case_sensitive,
+            parameters,
         })
     }
 }
@@ -35,12 +61,13 @@ impl<'a> Config<'a> {
 pub fn run(config: &Config) -> Result<(), Box<dyn Error>> {
     // reading file
 
+    println!("{:#?}", config);
     let mut f = File::open(config.filename)?;
     let mut contents = String::new();
 
     f.read_to_string(&mut contents)?;
 
-    let results = if config.case_sensitive {
+    let results = if config.parameters.contains(&Parameters::CaseSensitive) {
         search::search(&config.query, &contents)
     } else {
         search::search_case_insentive(&config.query, &contents)
@@ -55,6 +82,8 @@ pub fn run(config: &Config) -> Result<(), Box<dyn Error>> {
 
 #[cfg(test)]
 mod tests {
+    use std::vec;
+
     use super::*;
 
     #[test]
@@ -74,7 +103,7 @@ mod tests {
         let assert = Config {
             query: "query",
             filename: "filename",
-            case_sensitive: true,
+            parameters: vec![],
         };
 
         let result = Config::new(&args).unwrap();
@@ -87,7 +116,7 @@ mod tests {
         let config = Config {
             query: "to",
             filename: "poem.txt",
-            case_sensitive: false,
+            parameters: vec![],
         };
 
         let mut result = false;
@@ -104,7 +133,7 @@ mod tests {
         let config = Config {
             query: "to",
             filename: "not_exist_file.txt",
-            case_sensitive: false,
+            parameters: vec![],
         };
 
         let mut result: bool = true;
