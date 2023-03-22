@@ -2,21 +2,30 @@ use std::error::Error;
 use std::fs::File;
 use std::io::prelude::*;
 
+mod save;
 mod search;
 
 #[derive(PartialEq, Debug)]
 pub enum Parameters {
     CaseSensitive,
-    Save,
+    Save(String),
 }
 
 impl Parameters {
-    pub fn is_valid(param: &str) -> Result<Parameters, &str> {
-        match param.trim() {
-            "case_sensitive" => return Ok(Parameters::CaseSensitive),
-            "save" => return Ok(Parameters::Save),
-            _ => return Err("Parameter not found"),
-        };
+    pub fn is_valid(param: &str) -> Result<Parameters, &'static str> {
+        if param.trim().eq("case_sensitive") {
+            return Ok(Parameters::CaseSensitive);
+        } else if param.trim().contains("save") {
+            let output: Vec<&str> = param.trim().split("=").collect();
+            println!("{:#?}", output);
+            if !param.contains("=") || output[1].is_empty() {
+                return Err(
+                    "save arguments must receive a path of the file to save\nex: save=output.txt",
+                );
+            }
+            return Ok(Parameters::Save(String::from(output[1])));
+        }
+        return Err("Parameter not found");
     }
 }
 #[derive(PartialEq, Debug)]
@@ -42,7 +51,7 @@ impl<'a> Config<'a> {
             for par in &args[3..] {
                 match Parameters::is_valid(&par.replace("--", "")) {
                     Ok(p) => parameters.push(p),
-                    Err(_) => return Err("Invalid parameters"),
+                    Err(e) => return Err(e),
                 }
             }
         }
@@ -72,6 +81,12 @@ pub fn run(config: &Config) -> Result<(), Box<dyn Error>> {
     } else {
         search::search_case_insentive(&config.query, &contents)
     };
+
+    for param in config.parameters.iter() {
+        if let Parameters::Save(filename) = param {
+            save::save_in_file(&results, filename)
+        }
+    }
 
     for lines in results {
         println!("{}", lines);
