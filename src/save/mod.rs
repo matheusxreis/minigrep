@@ -7,7 +7,9 @@ pub fn save_in_file(contents: &Vec<&str>, filename: &str) {
         value += line;
         value += "\n";
     }
-    fs::write(Path::new(filename), value.trim()).unwrap()
+    if !value.is_empty() {
+        fs::write(Path::new(filename), value.trim()).unwrap()
+    }
 }
 
 #[cfg(test)]

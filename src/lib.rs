@@ -46,6 +46,9 @@ impl<'a> Config<'a> {
 
         let mut parameters = Vec::new();
 
+        if (args.len() > 3 && !args[3].contains("--")) || (args.len() > 3 && args[3].eq("--")) {
+            return Err("Params must be separate from the rest using '--'\nex: cargo run nobody poem.txt --case_sensitive save=output.txt ");
+        }
         if args.len() > 3 && args[3].contains("--") && args[3].len() > 2 {
             for par in &args[3..] {
                 match Parameters::is_valid(&par.replace("--", "")) {
