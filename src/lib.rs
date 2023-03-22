@@ -70,7 +70,6 @@ impl<'a> Config<'a> {
 pub fn run(config: &Config) -> Result<(), Box<dyn Error>> {
     // reading file
 
-    println!("{:#?}", config);
     let mut f = File::open(config.filename)?;
     let mut contents = String::new();
 
