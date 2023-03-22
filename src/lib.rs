@@ -1,3 +1,4 @@
+use std::env;
 use std::error::Error;
 use std::fs::File;
 use std::io::prelude::*;
@@ -5,6 +6,7 @@ use std::io::prelude::*;
 pub struct Config<'a> {
     pub query: &'a str,
     pub filename: &'a str,
+    pub case_sensitive: bool,
 } // if it will receive a reference
   // it needs to know until which block it is valid
 
@@ -17,7 +19,14 @@ impl<'a> Config<'a> {
         let query = &args[1];
         let filename = &args[2];
 
-        Ok(Config { query, filename })
+        let case_sensitive = env::var("CASE_SENSITIVE").is_err(); 
+        // returns true if env var is not defined and false case is defined
+
+        Ok(Config {
+            query,
+            filename,
+            case_sensitive,
+        })
     }
 }
 
@@ -29,7 +38,13 @@ pub fn run(config: &Config) -> Result<(), Box<dyn Error>> {
 
     f.read_to_string(&mut contents)?;
 
-    for lines in search(&config.query, &contents) {
+    let results = if config.case_sensitive {
+        search(&config.query, &contents)
+    } else {
+        search_case_insentive(&config.query, &contents)
+    };
+
+    for lines in results {
         println!("{}", lines);
     }
 
