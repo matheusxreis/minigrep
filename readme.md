@@ -1,11 +1,5 @@
 # minigrep
 
-<div style="display:flex">
-
-<img alt="androidstudio" height="40" width="50" src="https://raw.githubusercontent.com/devicons/devicon/1119b9f84c0290e0f0b38982099a2bd027a48bf1/icons/rust/rust-plain.svg" />
-</div>
-
-
 ### About
 
 A simple grep tool, from chapter 12 of the Rust Book with some modifications. 
