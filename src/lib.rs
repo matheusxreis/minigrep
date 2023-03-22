@@ -17,7 +17,6 @@ impl Parameters {
             return Ok(Parameters::CaseSensitive);
         } else if param.trim().contains("save") {
             let output: Vec<&str> = param.trim().split("=").collect();
-            println!("{:#?}", output);
             if !param.contains("=") || output[1].is_empty() {
                 return Err(
                     "save arguments must receive a path of the file to save\nex: save=output.txt",
